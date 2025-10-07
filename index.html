@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume Builder - Simple Modern UI</title>
+    <style>
+        /* Reset dan Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8fafc;
+            color: #334155;
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+        }
+
+        .form-section {
+            padding: 30px;
+        }
+
+        .form-section h2 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #1e293b;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 10px;
+        }
+
+        /* Form Styles */
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #475569;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"],
+        textarea {
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        input[type="tel"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            align-self: flex-start;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* WYSIWYG Editor */
+        .wysiwyg-container {
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: border-color 0.3s ease;
+        }
+
+        .wysiwyg-container:focus-within {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .wysiwyg-toolbar {
+            background: #f1f5f9;
+            padding: 10px;
+            display: flex;
+            gap: 8px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .wysiwyg-toolbar button {
+            padding: 8px 12px;
+            font-size: 0.9rem;
+            background: white;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            color: #475569;
+            transition: all 0.2s ease;
+        }
+
+        .wysiwyg-toolbar button:hover {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+
+        .wysiwyg-editor {
+            min-height: 120px;
+            padding: 16px;
+            outline: none;
+            font-family: inherit;
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+
+        /* Experience Section */
+        .experience-section {
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .experience-section:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .experience-section .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .experience-section .full-row {
+            grid-column: 1 / -1;
+        }
+
+        .remove-section {
+            background: #ef4444;
+            padding: 8px 16px;
+            font-size: 0.9rem;
+            margin-top: 10px;
+            align-self: flex-start;
+        }
+
+        .remove-section:hover {
+            background: #dc2626;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .form-section {
+                padding: 20px;
+            }
+
+            .experience-section .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .wysiwyg-toolbar {
+                flex-wrap: wrap;
+            }
+        }
+
+        /* Smooth Transitions */
+        * {
+            transition: all 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Resume Builder</h1>
+            <p>Buat resume profesional dengan mudah</p>
+        </div>
+
+        <!-- Formulir Pertama: API Connect -->
+        <div class="form-section">
+            <h2>Konfigurasi API</h2>
+            <form id="apiForm">
+                <label for="apiKey">API Key</label>
+                <input type="text" id="apiKey" placeholder="Masukkan API Key Anda" required>
+                <button type="submit" id="connectBtn">Connect</button>
+            </form>
+        </div>
+
+        <!-- Formulir Kedua: Data Resume -->
+        <div class="form-section">
+            <h2>Data Pribadi & Profesional</h2>
+            <form id="mainForm">
+                <label for="fullName">Nama Lengkap</label>
+                <input type="text" id="fullName" placeholder="Masukkan nama lengkap" required>
+
+                <label for="profession">Profesi</label>
+                <input type="text" id="profession" placeholder="Misal: Software Engineer" required>
+
+                <label for="phone">No Telepon</label>
+                <input type="tel" id="phone" placeholder="+62 812 3456 7890" required>
+
+                <label for="email">Email</label>
+                <input type="email" id="email" placeholder="example@email.com" required>
+
+                <label for="portfolio">Link Portfolio</label>
+                <input type="text" id="portfolio" placeholder="https://portfolio.example.com">
+
+                <label for="linkedin">Link LinkedIn</label>
+                <input type="text" id="linkedin" placeholder="https://linkedin.com/in/username">
+
+                <label for="address">Alamat</label>
+                <input type="text" id="address" placeholder="Jl. Contoh No. 123, Kota">
+
+                <label for="summary">Summary</label>
+                <textarea id="summary" placeholder="Ringkasan singkat tentang diri Anda..."></textarea>
+
+                <!-- Key Skills WYSIWYG -->
+                <label>Key Skills</label>
+                <div class="wysiwyg-container" tabindex="-1">
+                    <div class="wysiwyg-toolbar">
+                        <button type="button" onclick="formatText('bold')">Bold</button>
+                        <button type="button" onclick="formatText('italic')">Italic</button>
+                        <button type="button" onclick="formatText('insertUnorderedList')">Bullet List</button>
+                        <button type="button" onclick="formatText('insertOrderedList')">Number List</button>
+                        <button type="button" onclick="formatText('insertParagraph')">New Paragraph</button>
+                    </div>
+                    <div id="keySkills" class="wysiwyg-editor" contenteditable="true" placeholder="Masukkan key skills Anda..."></div>
+                </div>
+
+                <!-- Professional Experience -->
+                <label>Professional Experience</label>
+                <div id="experiences">
+                    <div class="experience-section">
+                        <div class="form-row">
+                            <div>
+                                <label for="company1">Nama Perusahaan</label>
+                                <input type="text" id="company1" placeholder="Nama perusahaan">
+                            </div>
+                            <div>
+                                <label for="startDate1">Waktu Mulai</label>
+                                <input type="text" id="startDate1" placeholder="Misal: Jan 2020">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div>
+                                <label for="endDate1">Waktu Akhir</label>
+                                <input type="text" id="endDate1" placeholder="Misal: Des 2023">
+                            </div>
+                            <div>
+                                <label for="position1">Posisi</label>
+                                <input type="text" id="position1" placeholder="Misal: Developer">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="full-row">
+                                <label for="description1">Deskripsi</label>
+                                <textarea id="description1" placeholder="Deskripsikan pengalaman Anda..."></textarea>
+                            </div>
+                        </div>
+                        <button type="button" class="remove-section" onclick="removeSection(this)">Hapus Section</button>
+                    </div>
+                </div>
+                <button type="button" onclick="addExperienceSection()">Tambah Experience</button>
+
+                <!-- Education WYSIWYG -->
+                <label>Education</label>
+                <div class="wysiwyg-container" tabindex="-1">
+                    <div class="wysiwyg-toolbar">
+                        <button type="button" onclick="formatText('bold', 'education')">Bold</button>
+                        <button type="button" onclick="formatText('italic', 'education')">Italic</button>
+                        <button type="button" onclick="formatText('insertUnorderedList', 'education')">Bullet List</button>
+                        <button type="button" onclick="formatText('insertOrderedList', 'education')">Number List</button>
+                        <button type="button" onclick="formatText('insertParagraph', 'education')">New Paragraph</button>
+                    </div>
+                    <div id="education" class="wysiwyg-editor" contenteditable="true" placeholder="Masukkan riwayat pendidikan..."></div>
+                </div>
+
+                <!-- Certificates WYSIWYG -->
+                <label>Certificates</label>
+                <div class="wysiwyg-container" tabindex="-1">
+                    <div class="wysiwyg-toolbar">
+                        <button type="button" onclick="formatText('bold', 'certificates')">Bold</button>
+                        <button type="button" onclick="formatText('italic', 'certificates')">Italic</button>
+                        <button type="button" onclick="formatText('insertUnorderedList', 'certificates')">Bullet List</button>
+                        <button type="button" onclick="formatText('insertOrderedList', 'certificates')">Number List</button>
+                        <button type="button" onclick="formatText('insertParagraph', 'certificates')">New Paragraph</button>
+                    </div>
+                    <div id="certificates" class="wysiwyg-editor" contenteditable="true" placeholder="Masukkan sertifikat Anda..."></div>
+                </div>
+
+                <button type="submit">Generate Resume</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // API Connect Form
+        document.getElementById('apiForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const apiKey = document.getElementById('apiKey').value;
+            if (apiKey) {
+                document.getElementById('connectBtn').textContent = 'Connected!';
+                document.getElementById('connectBtn').disabled = true;
+                // Di sini bisa tambahkan logika API call, misal fetch ke server
+                console.log('API Connected with key:', apiKey);
+                alert('API berhasil di-connect!'); // Placeholder
+            }
+        });
+
+        // WYSIWYG Formatting (menggunakan execCommand untuk simplicity)
+        function formatText(command, targetId = 'keySkills') {
+            const editor = document.getElementById(targetId);
+            if (document.activeElement !== editor) {
+                editor.focus();
+            }
+            document.execCommand(command, false, null);
+            editor.focus();
+        }
+
+        // Add Experience Section
+        let sectionCounter = 2;
+        function addExperienceSection() {
+            const container = document.getElementById('experiences');
+            const newSection = document.createElement('div');
+            newSection.className = 'experience-section';
+            newSection.innerHTML = `
+                <div class="form-row">
+                    <div>
+                        <label for="company${sectionCounter}">Nama Perusahaan</label>
+                        <input type="text" id="company${sectionCounter}" placeholder="Nama perusahaan">
+                    </div>
+                    <div>
+                        <label for="startDate${sectionCounter}">Waktu Mulai</label>
+                        <input type="text" id="startDate${sectionCounter}" placeholder="Misal: Jan 2020">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div>
+                        <label for="endDate${sectionCounter}">Waktu Akhir</label>
+                        <input type="text" id="endDate${sectionCounter}" placeholder="Misal: Des 2023">
+                    </div>
+                    <div>
+                        <label for="position${sectionCounter}">Posisi</label>
+                        <input type="text" id="position${sectionCounter}" placeholder="Misal: Developer">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="full-row">
+                        <label for="description${sectionCounter}">Deskripsi</label>
+                        <textarea id="description${sectionCounter}" placeholder="Deskripsikan pengalaman Anda..."></textarea>
+                    </div>
+                </div>
+                <button type="button" class="remove-section" onclick="removeSection(this)">Hapus Section</button>
+            `;
+            container.appendChild(newSection);
+            sectionCounter++;
+        }
+
+        // Remove Experience Section
+        function removeSection(button) {
+            if (confirm('Hapus section ini?')) {
+                button.parentElement.remove();
+            }
+        }
+
+        // Main Form Submit (Placeholder)
+        document.getElementById('mainForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            // Kumpulkan data form dan proses (misal generate PDF atau kirim ke API)
+            console.log('Form submitted!'); // Placeholder
+            alert('Resume berhasil di-generate! (Ini placeholder - tambahkan logika API di sini)');
+        });
+
+        // Auto-focus pada WYSIWYG saat diklik label
+        document.querySelectorAll('label[for="keySkills"], label[for="education"], label[for="certificates"]').forEach(label => {
+            label.addEventListener('click', function() {
+                const id = this.getAttribute('for');
+                document.getElementById(id).focus();
+            });
+        });
+    </script>
+</body>
+</html>
