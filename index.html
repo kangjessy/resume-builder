@@ -21,10 +21,15 @@
         <!-- Formulir Pertama: API Connect -->
         <div class="form-section">
             <h2>Konfigurasi API</h2>
+            <!-- <p>Masukkan API Key Anda untuk terhubung ke layanan ini.</p> -->
             <form id="apiForm">
-                <label for="apiKey">API Key</label>
-                <input type="text" id="apiKey" placeholder="Masukkan API Key Anda" required>
-                <button type="submit" id="connectBtn" class="connected">Connect</button>
+                <label for="apiKey">Masukkan API Key Google Apps Script Anda untuk terhubung ke layanan ini.</label>
+                <p class="info-text"><i>Lihat cara <a href="https://github.com/kangjessy/resume-builder"
+                            target="_blank">mendapatkan API Key</a>.</i></p>
+                <div class="d-flex align-center">
+                    <input type="text" id="apiKey" placeholder="Masukkan API Key Anda" required>
+                    <button type="submit" id="connectBtn" class="connected">Connect</button>
+                </div>
                 <p id="statusMessage" class="status-message"></p>
             </form>
         </div>
@@ -146,9 +151,6 @@
         </div>
     </div>
 
-    <!-- <script src="/scripts/connection.js"></script> -->
-    <script src="/scripts/field-formatter.js"></script>
-
     <script>
         // Saat halaman pertama kali load, disable semua elemen di form utama
         window.addEventListener('DOMContentLoaded', () => {
@@ -156,153 +158,214 @@
                 el.disabled = true;
             });
         });
-        
+
         // API Connect Form
-const apiForm = document.getElementById('apiForm');
-const mainForm = document.getElementById('mainForm');
-const connectBtn = document.getElementById('connectBtn');
-const apiInput = document.getElementById('apiKey');
+        const apiForm = document.getElementById('apiForm');
+        const mainForm = document.getElementById('mainForm');
+        const connectBtn = document.getElementById('connectBtn');
+        const apiInput = document.getElementById('apiKey');
 
-const statusMessage = document.getElementById('statusMessage');
+        const statusMessage = document.getElementById('statusMessage');
 
-// Default state
-let isConnected = false;
-let currentApiUrl = '';
+        // Default state
+        let isConnected = false;
+        let currentApiUrl = '';
 
-// Saat halaman load: disable form utama
-window.addEventListener('DOMContentLoaded', () => {
-    toggleMainForm(false);
-});
-
-// Fungsi bantu untuk enable/disable form utama
-function toggleMainForm(state) {
-    mainForm.querySelectorAll('input, textarea, button').forEach(el => {
-        el.disabled = !state;
-    });
-}
-
-// Fungsi bantu untuk enable/disable form koneksi
-function toggleApiForm(state) {
-    apiForm.querySelectorAll('input, button').forEach(el => {
-        el.disabled = !state;
-    });
-}
-
-// Tombol Connect / Disconnect
-apiForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    if (isConnected) {
-        // ==== MODE DISCONNECT ====
-        isConnected = false;
-        currentApiUrl = '';
-        apiInput.disabled = false;
-        connectBtn.textContent = 'Connect';
-
-        // 🟠 Ganti warna tombol jadi biru (connect mode)
-        connectBtn.classList.remove('disconnected');
-        connectBtn.classList.add('connected');
-
-        toggleMainForm(false);
-        alert('🔴 Terputus dari API');
-        statusMessage.textContent = 'Status: Terputus';
-        statusMessage.style.color = 'red';
-        return;
-    }
-
-    // ==== MODE CONNECT ====
-    const apiUrl = apiInput.value.trim();
-    if (!apiUrl) return alert('Masukkan URL API terlebih dahulu');
-
-    connectBtn.textContent = 'Menguji koneksi...';
-    toggleApiForm(false);
-
-    try {
-        const res = await fetch(`${apiUrl}?action=ping`);
-        const data = await res.json();
-
-        if (data.status === 'connected') {
-            alert('✅ Koneksi berhasil!');
-            statusMessage.textContent = 'Status: Terhubung';
-            statusMessage.style.color = 'green';
-            isConnected = true;
-            currentApiUrl = apiUrl;
-            connectBtn.textContent = 'Disconnect';
-            apiInput.disabled = true;
-            toggleMainForm(true);
-
-            // 🟢 Ganti warna tombol jadi merah (disconnect mode)
-            connectBtn.classList.remove('connected');
-            connectBtn.classList.add('disconnected');
-        } else {
-            throw new Error(data.message || 'Tidak bisa terhubung');
-        }
-    } catch (err) {
-        alert('❌ Gagal koneksi: ' + err.message);
-        connectBtn.textContent = 'Connect';
-    } finally {
-        toggleApiForm(true);
-        if (isConnected) apiInput.disabled = true;
-    }
-});
-
-// === HANDLE SUBMIT FORM RESUME ===
-mainForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    if (!isConnected) return alert('Harap koneksikan API terlebih dahulu.');
-
-    const formData = {
-        fullName: document.getElementById('fullName').value,
-        profession: document.getElementById('profession').value,
-        phone: document.getElementById('phone').value,
-        email: document.getElementById('email').value,
-        portfolio: document.getElementById('portfolio').value,
-        linkedin: document.getElementById('linkedin').value,
-        address: document.getElementById('address').value,
-        summary: document.getElementById('summary').value,
-        keySkills: document.getElementById('keySkills').innerHTML,
-        education: document.getElementById('education').innerHTML,
-        certificates: document.getElementById('certificates').innerHTML,
-    };
-
-    // Kirim ke Apps Script
-    try {
-        const res = await fetch(`${currentApiUrl}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(formData)
+        // Saat halaman load: disable form utama
+        window.addEventListener('DOMContentLoaded', () => {
+            toggleMainForm(false);
         });
 
-        const data = await res.json();
-        if (data.success) {
-            alert('✅ Resume berhasil dibuat!');
-            
-            // Tambahkan tombol preview
-            let preview = document.getElementById('previewLink');
-            if (!preview) {
-                preview = document.createElement('div');
-                preview.id = 'previewLink';
-                preview.style.marginTop = '20px';
-                preview.innerHTML = `
-                    <a href="${data.pdfUrl}" target="_blank" 
-                       style="display:inline-block;padding:12px 20px;background:#3b82f6;color:white;border-radius:8px;text-decoration:none;">
-                        🔗 Lihat Preview Resume (PDF)
-                    </a>`;
-                mainForm.appendChild(preview);
-            } else {
-                preview.querySelector('a').href = data.pdfUrl;
-            }
-        } else {
-            alert('❌ Gagal membuat resume: ' + data.message);
+        // Fungsi bantu untuk enable/disable form utama
+        function toggleMainForm(state) {
+            mainForm.querySelectorAll('input, textarea, button').forEach(el => {
+                el.disabled = !state;
+            });
         }
-    } catch (err) {
-        alert('⚠️ Terjadi kesalahan: ' + err.message);
-    }
-});
+
+        // Fungsi bantu untuk enable/disable form koneksi
+        function toggleApiForm(state) {
+            apiForm.querySelectorAll('input, button').forEach(el => {
+                el.disabled = !state;
+            });
+        }
+
+        // Tombol Connect / Disconnect
+        apiForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (isConnected) {
+                // ==== MODE DISCONNECT ====
+                isConnected = false;
+                currentApiUrl = '';
+                apiInput.disabled = false;
+                connectBtn.textContent = 'Connect';
+
+                // 🟠 Ganti warna tombol jadi biru (connect mode)
+                connectBtn.classList.remove('disconnected');
+                connectBtn.classList.add('connected');
+
+                toggleMainForm(false);
+                // alert('🔴 Terputus dari API');
+                statusMessage.textContent = 'Status: Terputus';
+                statusMessage.style.color = 'red';
+                return;
+            }
+
+            // ==== MODE CONNECT ====
+            const apiUrl = apiInput.value.trim();
+            if (!apiUrl) return alert('Masukkan URL API terlebih dahulu');
+
+            connectBtn.textContent = 'Connecting...';
+            toggleApiForm(false);
+
+            try {
+                const res = await fetch(`${apiUrl}?action=ping`);
+                const data = await res.json();
+
+                if (data.status === 'connected') {
+                    // alert('✅ Koneksi berhasil!');
+                    statusMessage.textContent = 'Status: Terhubung';
+                    statusMessage.style.color = 'green';
+                    isConnected = true;
+                    currentApiUrl = apiUrl;
+                    connectBtn.textContent = 'Disconnect';
+                    apiInput.disabled = true;
+                    toggleMainForm(true);
+
+                    // 🟢 Ganti warna tombol jadi merah (disconnect mode)
+                    connectBtn.classList.remove('connected');
+                    connectBtn.classList.add('disconnected');
+                } else {
+                    throw new Error(data.message || 'Tidak bisa terhubung');
+                }
+            } catch (err) {
+                // alert('❌ Gagal koneksi: ' + err.message);
+                statusMessage.textContent = 'Status: Gagal terhubung';
+                statusMessage.style.color = 'red';
+                connectBtn.textContent = 'Connect';
+            } finally {
+                toggleApiForm(true);
+                if (isConnected) apiInput.disabled = true;
+            }
+        });
+
+        // === HANDLE SUBMIT FORM RESUME ===
+        mainForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!isConnected) return alert('Harap koneksikan API terlebih dahulu.');
+
+            const formData = new FormData(mainForm);
+            const data = Object.fromEntries(formData.entries());
+
+            // Sesuaikan key agar sama dengan placeholder di template & Apps Script
+            const fixedData = {
+                fullName: data.fullName || '',
+                profession: data.profession || '',
+                email: data.email || '',
+                phone: data.phone || '',
+                portfolio: data.portfolio || '',
+                linkedin: data.linkedin || '',
+                address: data.address || '',
+                summary: data.summary || '',
+                keySkills: data.keySkills || '',
+                education: data.education || '',
+                certificates: data.certificates || '',
+            };
+
+            // Kirim ke Apps Script
+            try {
+                const response = await fetch(currentApiUrl, {
+                    method: 'POST',
+                    body: JSON.stringify(fixedData),
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('Resume berhasil dibuat!');
+                    pdfLink.href = result.pdfUrl;
+                    outputContainer.classList.remove('hidden');
+                } else {
+                    alert('Gagal membuat resume: ' + result.message);
+                }
+            } catch (error) {
+                alert('Terjadi kesalahan koneksi ke Apps Script.');
+                console.error(error);
+            }
+        });
+
+        // End of API Connect Form
+
+        // Field Formatter (WYSIWYG)
+        // WYSIWYG Formatting (menggunakan execCommand untuk simplicity)
+        function formatText(command, targetId = 'keySkills') {
+            const editor = document.getElementById(targetId);
+            if (document.activeElement !== editor) {
+                editor.focus();
+            }
+            document.execCommand(command, false, null);
+            editor.focus();
+        }
+
+        // Add Experience Section
+        let sectionCounter = 2;
+        function addExperienceSection() {
+            const container = document.getElementById('experiences');
+            const newSection = document.createElement('div');
+            newSection.className = 'experience-section';
+            newSection.innerHTML = `
+        <div class="form-row">
+            <div>
+                <label for="company${sectionCounter}">Nama Perusahaan</label>
+                <input type="text" id="company${sectionCounter}" placeholder="Nama perusahaan">
+            </div>
+            <div>
+                <label for="startDate${sectionCounter}">Waktu Mulai</label>
+                <input type="text" id="startDate${sectionCounter}" placeholder="Misal: Jan 2020">
+            </div>
+        </div>
+        <div class="form-row">
+            <div>
+                <label for="endDate${sectionCounter}">Waktu Akhir</label>
+                <input type="text" id="endDate${sectionCounter}" placeholder="Misal: Des 2023">
+            </div>
+            <div>
+                <label for="position${sectionCounter}">Posisi</label>
+                <input type="text" id="position${sectionCounter}" placeholder="Misal: Developer">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="full-row">
+                <label for="description${sectionCounter}">Deskripsi</label>
+                <textarea id="description${sectionCounter}" placeholder="Deskripsikan pengalaman Anda..."></textarea>
+            </div>
+        </div>
+        <button type="button" class="remove-section" onclick="removeSection(this)">Hapus Section</button>
+    `;
+            container.appendChild(newSection);
+            sectionCounter++;
+        }
+
+        // Remove Experience Section
+        function removeSection(button) {
+            if (confirm('Hapus section ini?')) {
+                button.parentElement.remove();
+            }
+        }
+
+        // Auto-focus pada WYSIWYG saat diklik label
+        document.querySelectorAll('label[for="keySkills"], label[for="education"], label[for="certificates"]').forEach(label => {
+            label.addEventListener('click', function () {
+                const id = this.getAttribute('for');
+                document.getElementById(id).focus();
+            });
+        });
 
     </script>
 </body>
-    <!-- <script src="/scripts/connection.js"></script> -->
+<!-- <script src="/scripts/connection.js"></script> -->
 
 
 </html>

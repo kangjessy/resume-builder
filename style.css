@@ -13,6 +13,25 @@
             padding: 20px;
         }
 
+        #statusMessage {
+            font-weight: 600;
+            /* margin-left: 15px; */
+        }
+        .d-flex {
+            display: flex;
+            gap: 10px;
+        }
+
+        .align-center {
+            align-items: center;
+        }
+
+        .info-text {
+            font-size: 0.9rem;
+            color: #64748b;
+            margin-top: -14px;
+        }
+
         .container {
             max-width: 800px;
             margin: 0 auto;
