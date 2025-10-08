@@ -4,6 +4,8 @@ const mainForm = document.getElementById('mainForm');
 const connectBtn = document.getElementById('connectBtn');
 const apiInput = document.getElementById('apiKey');
 
+const statusMessage = document.getElementById('statusMessage');
+
 // Default state
 let isConnected = false;
 let currentApiUrl = '';
@@ -44,6 +46,8 @@ apiForm.addEventListener('submit', async (e) => {
 
         toggleMainForm(false);
         alert('🔴 Terputus dari API');
+        statusMessage.textContent = 'Status: Terputus';
+        statusMessage.style.color = 'red';
         return;
     }
 
@@ -60,6 +64,8 @@ apiForm.addEventListener('submit', async (e) => {
 
         if (data.status === 'connected') {
             alert('✅ Koneksi berhasil!');
+            statusMessage.textContent = 'Status: Terhubung';
+            statusMessage.style.color = 'green';
             isConnected = true;
             currentApiUrl = apiUrl;
             connectBtn.textContent = 'Disconnect';
