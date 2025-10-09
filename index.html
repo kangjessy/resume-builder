@@ -146,8 +146,8 @@
                         placeholder="Masukkan sertifikat Anda..."></div>
                 </div>
 
-                <label for="sendToEmail">Kirim hasil ke Email ini</label>
-                <input type="email" id="sendToEmail" name="sendToEmail" placeholder="contoh@email.com" required>
+                <!-- <label for="sendToEmail">Kirim hasil ke Email ini</label>
+                <input type="email" id="sendToEmail" name="sendToEmail" placeholder="contoh@email.com" required> -->
 
                 <button type="submit">Generate Resume</button>
             </form>
@@ -240,70 +240,60 @@
             }
         });
 
-
-        // ============================
-        // HANDLE SUBMIT FORM RESUME
-        // ============================
         mainForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            if (!isConnected) return alert('Harap koneksikan API terlebih dahulu.');
+        e.preventDefault();
+        if (!isConnected || !currentApiUrl) {
+            alert('Kamu harus connect dulu ke API!');
+            return;
+        }
 
-            const formData = new FormData(mainForm);
-            const data = Object.fromEntries(formData.entries());
+        // Ambil semua data form
+        const data = {
+            fullName: document.getElementById('fullName').value,
+            phone: document.getElementById('phone').value,
+            email: document.getElementById('email').value,
+            portfolio: document.getElementById('portfolio').value,
+            linkedin: document.getElementById('linkedin').value,
+            address: document.getElementById('address').value,
+            summary: document.getElementById('summary').value,
+            keySkills: document.getElementById('keySkills').innerHTML,
+            certificates: document.getElementById('certificates').innerHTML,
+            sendToEmail: '' // optional
+        };
 
-            // 🟢 UPDATE: Ambil pengalaman kerja dinamis dari elemen DOM
-            const experiences = [];
-            document.querySelectorAll('.experience-section').forEach((section, index) => {
-                const exp = {
-                    company: section.querySelector(`#company${index + 1}`)?.value || '',
-                    startDate: section.querySelector(`#startDate${index + 1}`)?.value || '',
-                    endDate: section.querySelector(`#endDate${index + 1}`)?.value || '',
-                    position: section.querySelector(`#position${index + 1}`)?.value || '',
-                    description: section.querySelector(`#description${index + 1}`)?.value || ''
-                };
-                // hanya push kalau ada isi
-                if (Object.values(exp).some(v => v.trim() !== '')) experiences.push(exp);
-            });
-
-            // 🟢 Siapkan data lengkap sesuai format Apps Script terbaru
-            const fixedData = {
-                action: 'generate',
-                fullName: data.fullName || '',
-                profession: data.profession || '',
-                email: data.email || '',
-                phone: data.phone || '',
-                portfolio: data.portfolio || '',
-                linkedin: data.linkedin || '',
-                address: data.address || '',
-                summary: data.summary || '',
-                keySkills: data.keySkills || '',
-                education: data.education || '',
-                certificates: data.certificates || '',
-                sendToEmail: data.sendToEmail || '',
-                experience: experiences, // ← ini dikirim sebagai array
-            };
-
-            try {
-                const response = await fetch(currentApiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(fixedData)
-                });
-
-                const result = await response.json();
-
-                // 🟢 Perbaikan: karena sekarang tidak ada file PDF, cukup tampilkan pesan sukses
-                if (result.success) {
-                    alert('✅ ' + result.message);
-                } else {
-                    alert('❌ Gagal: ' + result.message);
-                }
-            } catch (error) {
-                alert('Terjadi kesalahan koneksi ke Apps Script.');
-                console.error(error);
-            }
+        // Kumpulkan semua pengalaman kerja
+        const experiences = [];
+        document.querySelectorAll('.experience-section').forEach(section => {
+            const company = section.querySelector('input[id^="company"]').value;
+            const startDate = section.querySelector('input[id^="startDate"]').value;
+            const endDate = section.querySelector('input[id^="endDate"]').value;
+            const position = section.querySelector('input[id^="position"]').value;
+            const description = section.querySelector('textarea[id^="description"]').value;
+            experiences.push({ company, startDate, endDate, position, description });
         });
+        data.experience = JSON.stringify(experiences);
 
+        try {
+            const res = await fetch(currentApiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+            });
+            const result = await res.json();
+
+            if (result.status === 'success') {
+                alert('✅ Resume berhasil disimpan ke Google Sheet!');
+                mainForm.reset();
+                document.getElementById('keySkills').innerHTML = '';
+                document.getElementById('education').innerHTML = '';
+                document.getElementById('certificates').innerHTML = '';
+            } else {
+                alert('❌ Gagal menyimpan data: ' + result.message);
+            }
+        } catch (err) {
+            alert('❌ Error koneksi: ' + err.message);
+        }
+    });
 
         // ============================
         // WYSIWYG & Section Logic
