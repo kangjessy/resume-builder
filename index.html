@@ -146,6 +146,9 @@
                         placeholder="Masukkan sertifikat Anda..."></div>
                 </div>
 
+                <label for="sendToEmail">Kirim hasil ke Email ini</label>
+                <input type="email" id="sendToEmail" name="sendToEmail" placeholder="contoh@email.com" required>
+
                 <button type="submit">Generate Resume</button>
             </form>
         </div>
@@ -164,26 +167,21 @@
         const mainForm = document.getElementById('mainForm');
         const connectBtn = document.getElementById('connectBtn');
         const apiInput = document.getElementById('apiKey');
-
         const statusMessage = document.getElementById('statusMessage');
 
-        // Default state
         let isConnected = false;
         let currentApiUrl = '';
 
-        // Saat halaman load: disable form utama
         window.addEventListener('DOMContentLoaded', () => {
             toggleMainForm(false);
         });
 
-        // Fungsi bantu untuk enable/disable form utama
         function toggleMainForm(state) {
             mainForm.querySelectorAll('input, textarea, button').forEach(el => {
                 el.disabled = !state;
             });
         }
 
-        // Fungsi bantu untuk enable/disable form koneksi
         function toggleApiForm(state) {
             apiForm.querySelectorAll('input, button').forEach(el => {
                 el.disabled = !state;
@@ -200,13 +198,9 @@
                 currentApiUrl = '';
                 apiInput.disabled = false;
                 connectBtn.textContent = 'Connect';
-
-                // 🟠 Ganti warna tombol jadi biru (connect mode)
                 connectBtn.classList.remove('disconnected');
                 connectBtn.classList.add('connected');
-
                 toggleMainForm(false);
-                // alert('🔴 Terputus dari API');
                 statusMessage.textContent = 'Status: Terputus';
                 statusMessage.style.color = 'red';
                 return;
@@ -224,7 +218,6 @@
                 const data = await res.json();
 
                 if (data.status === 'connected') {
-                    // alert('✅ Koneksi berhasil!');
                     statusMessage.textContent = 'Status: Terhubung';
                     statusMessage.style.color = 'green';
                     isConnected = true;
@@ -232,15 +225,12 @@
                     connectBtn.textContent = 'Disconnect';
                     apiInput.disabled = true;
                     toggleMainForm(true);
-
-                    // 🟢 Ganti warna tombol jadi merah (disconnect mode)
                     connectBtn.classList.remove('connected');
                     connectBtn.classList.add('disconnected');
                 } else {
                     throw new Error(data.message || 'Tidak bisa terhubung');
                 }
             } catch (err) {
-                // alert('❌ Gagal koneksi: ' + err.message);
                 statusMessage.textContent = 'Status: Gagal terhubung';
                 statusMessage.style.color = 'red';
                 connectBtn.textContent = 'Connect';
@@ -250,7 +240,10 @@
             }
         });
 
-        // === HANDLE SUBMIT FORM RESUME ===
+
+        // ============================
+        // HANDLE SUBMIT FORM RESUME
+        // ============================
         mainForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             if (!isConnected) return alert('Harap koneksikan API terlebih dahulu.');
@@ -258,8 +251,23 @@
             const formData = new FormData(mainForm);
             const data = Object.fromEntries(formData.entries());
 
-            // Sesuaikan key agar sama dengan placeholder di template & Apps Script
+            // 🟢 UPDATE: Ambil pengalaman kerja dinamis dari elemen DOM
+            const experiences = [];
+            document.querySelectorAll('.experience-section').forEach((section, index) => {
+                const exp = {
+                    company: section.querySelector(`#company${index + 1}`)?.value || '',
+                    startDate: section.querySelector(`#startDate${index + 1}`)?.value || '',
+                    endDate: section.querySelector(`#endDate${index + 1}`)?.value || '',
+                    position: section.querySelector(`#position${index + 1}`)?.value || '',
+                    description: section.querySelector(`#description${index + 1}`)?.value || ''
+                };
+                // hanya push kalau ada isi
+                if (Object.values(exp).some(v => v.trim() !== '')) experiences.push(exp);
+            });
+
+            // 🟢 Siapkan data lengkap sesuai format Apps Script terbaru
             const fixedData = {
+                action: 'generate',
                 fullName: data.fullName || '',
                 profession: data.profession || '',
                 email: data.email || '',
@@ -271,24 +279,24 @@
                 keySkills: data.keySkills || '',
                 education: data.education || '',
                 certificates: data.certificates || '',
+                sendToEmail: data.sendToEmail || '',
+                experience: experiences, // ← ini dikirim sebagai array
             };
 
-            // Kirim ke Apps Script
             try {
                 const response = await fetch(currentApiUrl, {
                     method: 'POST',
-                    body: JSON.stringify(fixedData),
-                    headers: { 'Content-Type': 'application/json' }
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(fixedData)
                 });
 
                 const result = await response.json();
 
+                // 🟢 Perbaikan: karena sekarang tidak ada file PDF, cukup tampilkan pesan sukses
                 if (result.success) {
-                    alert('Resume berhasil dibuat!');
-                    pdfLink.href = result.pdfUrl;
-                    outputContainer.classList.remove('hidden');
+                    alert('✅ ' + result.message);
                 } else {
-                    alert('Gagal membuat resume: ' + result.message);
+                    alert('❌ Gagal: ' + result.message);
                 }
             } catch (error) {
                 alert('Terjadi kesalahan koneksi ke Apps Script.');
@@ -296,10 +304,11 @@
             }
         });
 
-        // End of API Connect Form
 
-        // Field Formatter (WYSIWYG)
-        // WYSIWYG Formatting (menggunakan execCommand untuk simplicity)
+        // ============================
+        // WYSIWYG & Section Logic
+        // ============================
+
         function formatText(command, targetId = 'keySkills') {
             const editor = document.getElementById(targetId);
             if (document.activeElement !== editor) {
@@ -309,7 +318,6 @@
             editor.focus();
         }
 
-        // Add Experience Section
         let sectionCounter = 2;
         function addExperienceSection() {
             const container = document.getElementById('experiences');
@@ -348,14 +356,12 @@
             sectionCounter++;
         }
 
-        // Remove Experience Section
         function removeSection(button) {
             if (confirm('Hapus section ini?')) {
                 button.parentElement.remove();
             }
         }
 
-        // Auto-focus pada WYSIWYG saat diklik label
         document.querySelectorAll('label[for="keySkills"], label[for="education"], label[for="certificates"]').forEach(label => {
             label.addEventListener('click', function () {
                 const id = this.getAttribute('for');
@@ -364,6 +370,7 @@
         });
 
     </script>
+
 </body>
 <!-- <script src="/scripts/connection.js"></script> -->
 
